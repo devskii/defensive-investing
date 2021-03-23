@@ -64,6 +64,12 @@ def is_conservatively_financed(total_assets, total_liabilities, market_cap):
 	book_value = total_assets - total_liabilities
 	return book_value >= .50 * market_cap
 
+def convert_eps_str_to_float(eps_5yr_total_str):
+	if (eps_5yr_total_str.startswith('(') and eps_5yr_total_str.endswith(')')):
+		return -1.0 * float(eps_5yr_total_str.replace('(', '').replace(')', ''))
+	else:
+		return float(eps_5yr_total_str)
+		
 if len(sys.argv) == 2:
 	ticker = sys.argv[1]
 	
@@ -155,11 +161,11 @@ if len(sys.argv) == 2:
 	print("")
 
 	# Check out the earnings to see what prices you would pay.
-	
 	indices_of_last_5yr_diluted_eps = [3, 5, 7, 9, 11]
 	eps_5yr_total = 0
 	for i in indices_of_last_5yr_diluted_eps:
-		eps_5yr_total += float(incomestatement_soup.find(string="EPS (Diluted)").parent.parent.parent.contents[i].find('span').text)
+		eps_5yr_total_str = incomestatement_soup.find(string="EPS (Diluted)").parent.parent.parent.contents[i].find('span').text
+		eps_5yr_total += convert_eps_str_to_float(eps_5yr_total_str)
 	eps_5yr_mean = eps_5yr_total / 5
 	eps_last_year = float(incomestatement_soup.find(string="EPS (Basic)").parent.parent.parent.contents[11].find('span').text)
 	max_purchase_price = min(25*eps_5yr_mean, 20*eps_last_year)
