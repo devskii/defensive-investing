@@ -28,6 +28,18 @@ for ticker in djia_tickers:
 	i+=1
 """
 
+def getsoup_marketcap(ticker):
+	marketcap_url = "https://www.marketwatch.com/investing/stock/{}?mod=over_search".format(ticker)
+	return BeautifulSoup(requests.get(marketcap_url).text, 'html.parser')
+
+def getsoup_balancesheet(ticker):
+	balancesheet_url = "https://www.marketwatch.com/investing/stock/{}/financials/balance-sheet".format(ticker)
+	return BeautifulSoup(requests.get(balancesheet_url).text, 'html.parser')
+
+def getsoup_incomestatement(ticker):
+	incomestatement_url = "https://www.marketwatch.com/investing/stock/{}/financials".format(ticker)
+	return BeautifulSoup(requests.get(incomestatement_url).text, 'html.parser')
+
 def has_large_market_cap(market_cap):
 	if market_cap.startswith('$'):
 		market_cap = market_cap[1:]
@@ -37,14 +49,6 @@ def has_large_market_cap(market_cap):
 		return float(market_cap[:len(market_cap)-1]) >= 30
 	else: 
 		return False
-
-"""
-print(has_large_market_cap("31B")) #true
-print(has_large_market_cap("300M")) #false
-print(has_large_market_cap("29B")) #false
-print(has_large_market_cap("30B")) #true
-print(has_large_market_cap("2T")) #true
-"""
 
 def in_millions(value):
 	if value.startswith('$'):
@@ -63,9 +67,12 @@ def is_conservatively_financed(total_assets, total_liabilities, market_cap):
 if len(sys.argv) == 2:
 	ticker = sys.argv[1]
 	
+	# Pull financial data upfront
+	marketcap_soup = getsoup_marketcap(ticker)
+	balancesheet_soup = getsoup_balancesheet(ticker)
+	incomestatement_soup = getsoup_incomestatement(ticker)
+
 	# Check large market cap
-	marketcap_url = "https://www.marketwatch.com/investing/stock/{}?mod=over_search".format(ticker)
-	marketcap_soup = BeautifulSoup(requests.get(marketcap_url).text, 'html.parser')
 	marketcap = marketcap_soup.find(string="Market Cap").parent.find_next_sibling('span').text
 	print("")
 	print("--- 1. Large? --- ")
@@ -99,8 +106,6 @@ if len(sys.argv) == 2:
 	print("")
 
 	# Check conservatively financed
-	balancesheet_url = "https://www.marketwatch.com/investing/stock/{}/financials/balance-sheet".format(ticker)
-	balancesheet_soup = BeautifulSoup(requests.get(balancesheet_url).text, 'html.parser')
 	row_offset_of_recent_years_total_assets = 11
 	total_assets_str = balancesheet_soup.find(string="Total Assets").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
 	total_liabilities_str = balancesheet_soup.find(string="Total Liabilities").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
@@ -150,8 +155,7 @@ if len(sys.argv) == 2:
 	print("")
 
 	# Check out the earnings to see what prices you would pay.
-	incomestatement_url = "https://www.marketwatch.com/investing/stock/{}/financials".format(ticker)
-	incomestatement_soup = BeautifulSoup(requests.get(incomestatement_url).text, 'html.parser')
+	
 	indices_of_last_5yr_diluted_eps = [3, 5, 7, 9, 11]
 	eps_5yr_total = 0
 	for i in indices_of_last_5yr_diluted_eps:
