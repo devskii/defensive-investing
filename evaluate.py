@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from helper_functions import *
 import requests
 import sys
 import webbrowser
@@ -11,22 +12,6 @@ def get_djia_tickers_and_links():
 	index_of_ticker_in_link = len("https://www.marketwatch.com/investing/stock/")
 	company_tickers = [link[index_of_ticker_in_link:].upper() for link in company_links]
 	return (company_tickers,company_links)
-
-#djia_tickers,djia_company_links = get_djia_tickers_and_links()
-
-#for link in djia_company_links:
-	#company_soup = BeautifulSoup(requests.get(link).text, 'html.parser')
-	#TODO: extract market cap and print whether or not it's > 30B
-
-"""
-print("--- Stocks in the DJIA ---")
-print("Courtesy of MarketWatch")
-
-i = 1
-for ticker in djia_tickers:
-	print(str(i) + " " + ticker)
-	i+=1
-"""
 
 def getsoup_marketcap(ticker):
 	marketcap_url = "https://www.marketwatch.com/investing/stock/{}?mod=over_search".format(ticker)
@@ -60,16 +45,6 @@ def in_millions(value):
 	elif value.endswith('M'):
 		return float(value[:len(value)-1])
 
-def is_conservatively_financed(total_assets, total_liabilities, market_cap):
-	book_value = total_assets - total_liabilities
-	return book_value >= .50 * market_cap
-
-def convert_eps_str_to_float(eps_5yr_total_str):
-	if (eps_5yr_total_str.startswith('(') and eps_5yr_total_str.endswith(')')):
-		return -1.0 * float(eps_5yr_total_str.replace('(', '').replace(')', ''))
-	else:
-		return float(eps_5yr_total_str)
-		
 if len(sys.argv) == 2:
 	ticker = sys.argv[1]
 	
@@ -117,6 +92,12 @@ if len(sys.argv) == 2:
 	total_liabilities_str = balancesheet_soup.find(string="Total Liabilities").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
 	total_shareholder_equity_str = balancesheet_soup.find(string="Total Shareholders' Equity").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
 	longterm_debt_str = balancesheet_soup.find(string="Long-Term Debt").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
+
+	total_assets = in_millions(total_assets_str)
+	total_liabilities = in_millions(total_liabilities_str)
+	total_shareholder_equity = in_millions(total_shareholder_equity_str)
+	longterm_debt = in_millions(longterm_debt_str)
+
 	print("--- 3. Conservatively Financed? ---")
 	print("Analyzing [{}] balance sheet...".format(ticker))
 	print("Attempting to pull data from Marketwatch...")
@@ -124,13 +105,8 @@ if len(sys.argv) == 2:
 	print("Total Liabilities: " + total_liabilities_str)
 	print("Total Shareholders' Equity: " + total_shareholder_equity_str)
 	print("Long-Term Debt: " + longterm_debt_str)
-	book_value_in_millions = in_millions(total_assets_str) - in_millions(total_liabilities_str)
-	capitalization_in_millions = in_millions(total_shareholder_equity_str) + in_millions(longterm_debt_str)
-	ratio = book_value_in_millions / capitalization_in_millions
-	print("1. Common Stock (at Book Value) = {}M".format(book_value_in_millions))
-	print("2. Capitalization, including Bank Debt = {}M".format(capitalization_in_millions))
-	print("3. Ratio = {}".format(ratio))
-	if ratio > .50:
+	
+	if is_conservatively_financed(total_assets, total_liabilities, total_shareholder_equity, longterm_debt):
 		print("[{}] is conservatively financed.".format(ticker))
 		print("YES")
 	else:
