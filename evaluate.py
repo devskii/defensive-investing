@@ -143,7 +143,9 @@ if len(sys.argv) == 2:
 		eps_5yr_total_str = incomestatement_soup.find(string="EPS (Diluted)").parent.parent.parent.contents[i].find('span').text
 		eps_5yr_total += convert_eps_str_to_float(eps_5yr_total_str)
 	eps_5yr_mean = eps_5yr_total / 5
-	eps_last_year = float(incomestatement_soup.find(string="EPS (Basic)").parent.parent.parent.contents[11].find('span').text)
+
+	eps_last_year = convert_eps_str_to_float(incomestatement_soup.find(string="EPS (Basic)").parent.parent.parent.contents[11].find('span').text)
+	
 	max_purchase_price = min(25*eps_5yr_mean, 20*eps_last_year)
 	current_price = float(incomestatement_soup.find('h3', {"class":"intraday__price"}).find('bg-quote').text.replace(',', ''))
 	print("-- 5. Reasonably Priced? ---")
