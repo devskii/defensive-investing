@@ -6,6 +6,8 @@ This is a script that will analyze a stock to determine whether it is a good Buy
 ## How to run the script
 In your command line, in the directory where the script is located, run `python3 evaluate.py TICK` where TICK is the stock ticker symbol that you want to analyze. You will be prompted with a series of questions and calculations. Some of these will open stock analysis websites (SeekingAlpha and Charles Schwab) in your browser and ask you to make a decision based on data from those pages.
 
+To run the unit tests, simply run `python3 -m unittest`.
+
 ## What we're looking for in a company
 1. Large cap
 2. Conservatively financed
