@@ -4,15 +4,6 @@ import requests
 import sys
 import webbrowser
 
-def get_djia_tickers_and_links():
-	url = "https://www.marketwatch.com/investing/index/DJIA"
-	djia_soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-	table = djia_soup.find("div", {"class":"element element--table ByIndexGainers"})
-	company_links = [company_element.get('href') for company_element in table.find_all("a")]
-	index_of_ticker_in_link = len("https://www.marketwatch.com/investing/stock/")
-	company_tickers = [link[index_of_ticker_in_link:].upper() for link in company_links]
-	return (company_tickers,company_links)
-
 def getsoup_marketcap(ticker):
 	marketcap_url = "https://www.marketwatch.com/investing/stock/{}?mod=over_search".format(ticker)
 	return BeautifulSoup(requests.get(marketcap_url).text, 'html.parser')
@@ -24,26 +15,6 @@ def getsoup_balancesheet(ticker):
 def getsoup_incomestatement(ticker):
 	incomestatement_url = "https://www.marketwatch.com/investing/stock/{}/financials".format(ticker)
 	return BeautifulSoup(requests.get(incomestatement_url).text, 'html.parser')
-
-def has_large_market_cap(market_cap):
-	if market_cap.startswith('$'):
-		market_cap = market_cap[1:]
-	if market_cap.endswith('T'):
-		return True
-	if market_cap.endswith('B'):
-		return float(market_cap[:len(market_cap)-1]) >= 30
-	else: 
-		return False
-
-def in_millions(value):
-	if value.startswith('$'):
-		value = value[1:]
-	if value.endswith('B'):
-		return float(value[:len(value)-1]) * 1000
-	elif value.endswith('T'):
-		return float(value[:len(value)-1]) * 1000000
-	elif value.endswith('M'):
-		return float(value[:len(value)-1])
 
 if len(sys.argv) == 2:
 	ticker = sys.argv[1]
@@ -98,6 +69,8 @@ if len(sys.argv) == 2:
 	total_shareholder_equity = in_millions(total_shareholder_equity_str)
 	longterm_debt = in_millions(longterm_debt_str)
 
+	balancesheet = BalanceSheet(total_assets, total_liabilities, total_shareholder_equity, longterm_debt)
+
 	print("--- 3. Conservatively Financed? ---")
 	print("Analyzing [{}] balance sheet...".format(ticker))
 	print("Attempting to pull data from Marketwatch...")
@@ -106,7 +79,7 @@ if len(sys.argv) == 2:
 	print("Total Shareholders' Equity: " + total_shareholder_equity_str)
 	print("Long-Term Debt: " + longterm_debt_str)
 	
-	if is_conservatively_financed(total_assets, total_liabilities, total_shareholder_equity, longterm_debt):
+	if balancesheet.is_conservatively_financed():
 		print("[{}] is conservatively financed.".format(ticker))
 		print("YES")
 	else:
