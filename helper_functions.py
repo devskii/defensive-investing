@@ -33,11 +33,15 @@ class BalanceSheet:
 		self.total_liabilities = total_liabilities
 		self.total_shareholder_equity = total_shareholder_equity
 		self.longterm_debt = longterm_debt
+		self.book_value = self.total_assets - self.total_liabilities
+		self.total_capitalization = self.total_shareholder_equity + self.longterm_debt
+		self.ratio = self.book_value / self.total_capitalization
 
 	def is_conservatively_financed(self):
-		book_value = self.total_assets - self.total_liabilities
-		total_capitalization = self.total_shareholder_equity + self.longterm_debt
-		return book_value >= .50 * total_capitalization
+		return self.ratio >= .50
+
+	def get_financing_ratio(self):
+		return self.ratio
 
 class IncomeStatement:
 	def __init__(self, diluted_eps_history, last_yr_basic_eps):

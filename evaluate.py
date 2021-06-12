@@ -78,7 +78,8 @@ if len(sys.argv) == 2:
 	print("Total Liabilities: " + total_liabilities_str)
 	print("Total Shareholders' Equity: " + total_shareholder_equity_str)
 	print("Long-Term Debt: " + longterm_debt_str)
-	
+	print("Financing Ratio: " + balancesheet.get_financing_ratio() + " (in other words, (Total Assets - Total Liabilities) / (Total Shareholders' Equity + Long-Term Debt)")
+
 	if balancesheet.is_conservatively_financed():
 		print("[{}] is conservatively financed.".format(ticker))
 		print("YES")
