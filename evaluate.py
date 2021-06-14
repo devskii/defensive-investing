@@ -4,25 +4,14 @@ import requests
 import sys
 import webbrowser
 
-def getsoup_marketcap(ticker):
-	marketcap_url = "https://www.marketwatch.com/investing/stock/{}?mod=over_search".format(ticker)
-	return BeautifulSoup(requests.get(marketcap_url).text, 'html.parser')
-
-def getsoup_balancesheet(ticker):
-	balancesheet_url = "https://www.marketwatch.com/investing/stock/{}/financials/balance-sheet".format(ticker)
-	return BeautifulSoup(requests.get(balancesheet_url).text, 'html.parser')
-
-def getsoup_incomestatement(ticker):
-	incomestatement_url = "https://www.marketwatch.com/investing/stock/{}/financials".format(ticker)
-	return BeautifulSoup(requests.get(incomestatement_url).text, 'html.parser')
-
 if len(sys.argv) == 2:
 	ticker = sys.argv[1]
 	
 	# Pull financial data upfront
 	marketcap_soup = getsoup_marketcap(ticker)
-	balancesheet_soup = getsoup_balancesheet(ticker)
 	incomestatement_soup = getsoup_incomestatement(ticker)
+
+	balancesheet = BalanceSheet.from_marketwatch_soup(ticker)
 
 	# Check large market cap
 	marketcap = marketcap_soup.find(string="Market Cap").parent.find_next_sibling('span').text
@@ -31,11 +20,9 @@ if len(sys.argv) == 2:
 	print("Market cap of [{}] is [{}]".format(ticker, marketcap))
 	if not has_large_market_cap(marketcap):
 		print("[{}] is too small to be considered a sound investment for the defensive investor.".format(ticker))
-		print("NO")
 		exit(0)
 	else:
 		print("[{}] is large enough for further analysis.".format(ticker))
-		print("YES")
 	print("")
 
 	# Check prominent
@@ -47,10 +34,8 @@ if len(sys.argv) == 2:
 	prominence = input("Is [{}] in the largest 25% of its sector? [y/n]".format(ticker))
 	if prominence == 'y':
 		print("Since [{}] is prominent it can be considered further.".format(ticker))
-		print("YES")
 	elif prominence == 'n':
 		print("Since [{}] is not prominent it cannot be considered further.".format(ticker))
-		print("NO")
 		exit(0)
 	else:
 		print("USER ERROR: Please answer 'y' or 'n' next time")
@@ -58,7 +43,7 @@ if len(sys.argv) == 2:
 	print("")
 
 	# Check conservatively financed
-	row_offset_of_recent_years_total_assets = 11
+	"""row_offset_of_recent_years_total_assets = 11
 	total_assets_str = balancesheet_soup.find(string="Total Assets").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
 	total_liabilities_str = balancesheet_soup.find(string="Total Liabilities").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
 	total_shareholder_equity_str = balancesheet_soup.find(string="Total Shareholders' Equity").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
@@ -69,23 +54,22 @@ if len(sys.argv) == 2:
 	total_shareholder_equity = in_millions(total_shareholder_equity_str)
 	longterm_debt = in_millions(longterm_debt_str)
 
-	balancesheet = BalanceSheet(total_assets, total_liabilities, total_shareholder_equity, longterm_debt)
+	balancesheet = BalanceSheet(total_assets, total_liabilities, total_shareholder_equity, longterm_debt)"""
 
-	print("--- 3. Conservatively Financed? ---")
+	balancesheet.print_report(ticker)
+
+	"""print("--- 3. Conservatively Financed? ---")
 	print("Analyzing [{}] balance sheet...".format(ticker))
 	print("Attempting to pull data from Marketwatch...")
 	print("Total Assets: " + total_assets_str)
 	print("Total Liabilities: " + total_liabilities_str)
 	print("Total Shareholders' Equity: " + total_shareholder_equity_str)
-	print("Long-Term Debt: " + longterm_debt_str)
-	print("Financing Ratio: " + balancesheet.get_financing_ratio() + " (in other words, (Total Assets - Total Liabilities) / (Total Shareholders' Equity + Long-Term Debt)")
-
+	print("Long-Term Debt: " + longterm_debt_str)"""
+	
 	if balancesheet.is_conservatively_financed():
 		print("[{}] is conservatively financed.".format(ticker))
-		print("YES")
 	else:
 		print("[{}] is not conservatively financed, therefore it is not good for the defensive investor.".format(ticker))
-		print("NO")
 		exit(0)
 	print("")
 
@@ -100,10 +84,8 @@ if len(sys.argv) == 2:
 	consistent_dividends = input("Has [{}] paid continual dividends for at least 10 years? [y/n]".format(ticker))
 	if consistent_dividends == 'y':
 		print("Since [{}] has paid consistent dividends for 10+ years it can be considered further".format(ticker))
-		print("YES")
 	elif consistent_dividends == 'n':
 		print("Since [{}] has an inconsistent dividend history it cannot be considered further.".format(ticker))
-		print("NO")
 		exit(0)
 	else:
 		print("USER ERROR: Please answer 'y' or 'n' next time")
