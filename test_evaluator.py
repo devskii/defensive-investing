@@ -8,6 +8,14 @@ class TestEvaluator(unittest.TestCase):
 		self.assertEqual(0.0, convert_eps_str_to_float("0"))
 		self.assertEqual(-3.1, convert_eps_str_to_float("(3.1)"))
 
+	def test_in_millions(self):
+		self.assertEqual(3400000, in_millions("3.4T"))
+		self.assertEqual(-2990000, in_millions("(2.99T)"))
+		self.assertEqual(19490, in_millions("19.49B"))
+		self.assertEqual(-18320, in_millions("(18.32B)"))
+		self.assertEqual(19.49, in_millions("19.49M"))
+		self.assertEqual(-18.32, in_millions("(18.32M)"))
+
 	def test_conservative_financing(self):
 		total_assets = 52150.0
 		total_liabilities = 28470.0
@@ -26,6 +34,11 @@ class TestEvaluator(unittest.TestCase):
 
 		balancesheet = BalanceSheet(total_assets, total_liabilities, total_shareholder_equity, longterm_debt)
 
+		self.assertFalse(balancesheet.is_conservatively_financed())
+
+	def test_balancesheet_BA(self):
+		# TODO this method may return a different result if the Marketwatch site changes. Figure out a way to mock this.
+		balancesheet = BalanceSheet.from_marketwatch_soup('BA')
 		self.assertFalse(balancesheet.is_conservatively_financed())
 
 	def test_decide_to_buy_company(self):

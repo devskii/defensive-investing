@@ -42,30 +42,7 @@ if len(sys.argv) == 2:
 		exit(0)
 	print("")
 
-	# Check conservatively financed
-	"""row_offset_of_recent_years_total_assets = 11
-	total_assets_str = balancesheet_soup.find(string="Total Assets").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
-	total_liabilities_str = balancesheet_soup.find(string="Total Liabilities").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
-	total_shareholder_equity_str = balancesheet_soup.find(string="Total Shareholders' Equity").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
-	longterm_debt_str = balancesheet_soup.find(string="Long-Term Debt").parent.parent.parent.contents[row_offset_of_recent_years_total_assets].find('span').text
-
-	total_assets = in_millions(total_assets_str)
-	total_liabilities = in_millions(total_liabilities_str)
-	total_shareholder_equity = in_millions(total_shareholder_equity_str)
-	longterm_debt = in_millions(longterm_debt_str)
-
-	balancesheet = BalanceSheet(total_assets, total_liabilities, total_shareholder_equity, longterm_debt)"""
-
 	balancesheet.print_report(ticker)
-
-	"""print("--- 3. Conservatively Financed? ---")
-	print("Analyzing [{}] balance sheet...".format(ticker))
-	print("Attempting to pull data from Marketwatch...")
-	print("Total Assets: " + total_assets_str)
-	print("Total Liabilities: " + total_liabilities_str)
-	print("Total Shareholders' Equity: " + total_shareholder_equity_str)
-	print("Long-Term Debt: " + longterm_debt_str)"""
-	
 	if balancesheet.is_conservatively_financed():
 		print("[{}] is conservatively financed.".format(ticker))
 	else:
